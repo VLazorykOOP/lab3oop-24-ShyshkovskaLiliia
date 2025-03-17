@@ -165,7 +165,6 @@ Vector Vector::Cross(const Vector& other) const {
 		x * other.y - y * other.x);
 }
 
-// Тестування
 int mainExample3() {
 	try {
 		cout << "Testing Vector class...\n";
