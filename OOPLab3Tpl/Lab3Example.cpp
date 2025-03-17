@@ -6,90 +6,97 @@
 #if !defined(CODING_VS_CODE)
 	#include <clocale>
 #endif
+#include <iostream>
+#include <string>
+#include <cmath>
+
 using namespace std;
 
-class Icosahedron {
-	double a; // side of the icosahedron
-	unsigned int color;
+class Rhombus {
+private:
+	double side;    
+	double diagonal;
+	string color; 
+
 public:
-	Icosahedron() : a(1.0), color(0) {}
-	Icosahedron(double ai) : a(ai), color(0) {}
-	Icosahedron(int ic) : a(1.0) { if (ic >= 0) color = ic; else color = 0; }
-	Icosahedron(double a, int c) {
-		this->a = a;
-		if (c >= 0) color = c; else color = 0;
-	}
-	double getA() const
-	{
-		return a;
-	}
-	void setA(double a)
-	{
-		if (a < 0 || a > 1.e+100)
-		{
-			cout << " Error set  a \n";
-			return;
-		}
-		this->a = a;
-	}
-	double getColor() const
-	{
-		return color;
-	}
-	void setColor(int c)
-	{
-		if (c < 0 || c > 10000)
-		{
-			cout << " Error set  color \n";
-			return;
-		}
-		this->color = c;
-	}
-	double S() {
-		return 5 * a * a * sqrt(3.0);
-	}
-	double V() {
-		return 5 * a * a * a * (3 + sqrt(5.0)) / 12.0;
-	}
-	double r() {
-		return a * (3 + sqrt(5.0)) / (4.0 * sqrt(3.0));
-	}
-	double R() {
-		return sqrt(2 * (5 + sqrt(5.0) * a)) / 4.0;
-	}
-	void printInfo()
-	{
-		cout << "\n a= " << a << " color = " << color;
-		cout << "  S= " << S() << " V = " << V() << "  r= " << r() << " V = " << R() << endl;
+	// Конструктори
+	Rhombus() : side(1.0), diagonal(sqrt(2)), color("white") {} // Конструктор за замовчуванням
+	Rhombus(double s, double d, string c) { // Конструктор з параметрами
+		setSide(s);
+		setDiagonal(d);
+		setColor(c);
 	}
 
+	// Методи встановлення значень
+	void setSide(double s) {
+		if (s > 0 && s < 1.e+100) {
+			side = s;
+		}
+		else {
+			cout << "Error: Invalid side value (" << s << "). Must be between 0 and 1.e+100.\n";
+		}
+	}
+
+	void setDiagonal(double d) {
+		if (d > 0 && d < 2 * side) {
+			diagonal = d;
+		}
+		else {
+			cout << "Error: Invalid diagonal value (" << d << "). Must be positive and smaller than twice the side length ("
+				<< 2 * side << ").\n";
+		}
+	}
+
+	void setColor(string c) {
+		color = c;
+	}
+
+	// Методи отримання значень (гетери)
+	double getSide() const { return side; }
+	double getDiagonal() const { return diagonal; }
+	string getColor() const { return color; }
+
+	// Обчислення площі та периметру
+	double area() const {
+		return (diagonal * diagonal) / 2;
+	}
+
+	double perimeter() const {
+		return 4 * side;
+	}
+
+	// Функція друку (використовує гетери для отримання значень)
+	void printInfo() const {
+		cout << "\nSide: " << getSide() << ", Diagonal: " << getDiagonal() << ", Color: " << getColor();
+		cout << ", Area: " << area() << ", Perimeter: " << perimeter() << endl;
+	}
 };
-int mainExample1()
-{
-	Icosahedron obj;
-	obj.printInfo();
-	double in_a; int in_color;
-	cout << " Input side and color Icosahedron  "; cin >> in_a >> in_color;
-	Icosahedron obj1(in_a), obj2(in_color), obj3(in_a, in_color);
-	obj1.printInfo();
-	obj2.printInfo();
-	obj3.printInfo();
-	obj.setA(-5);
-	obj.printInfo();
-	obj.setA(5);
-	obj.printInfo();
-	obj.setA(2.e100);
-	obj.printInfo();
-	obj.setColor(-10);
-	obj.printInfo();
-	obj.setColor(10);
-	obj.printInfo();
-	obj.setColor(10001);
-	obj.printInfo();
-	cout << " End testing \n";
-	return 1;
-}
 
+int mainExample1() {
+	// Тестування класу
+	Rhombus obj1; // Використання конструктора за замовчуванням
+	obj1.printInfo();
+
+	Rhombus obj2(3.0, 4.0, "blue"); // Використання конструктора з параметрами
+	obj2.printInfo();
+	obj1.setSide(2.5);
+	obj1.setDiagonal(3.5);
+	obj1.setColor("red");
+	obj1.printInfo();
+
+	// Спроба встановлення некоректних значень
+	obj1.setSide(-1.0);
+	obj1.setDiagonal(10.0);
+	obj1.printInfo();
+
+	// Отримання значень через методи доступу
+	cout << "\nTesting get methods:\n";
+	cout << "Side: " << obj2.getSide() << ", Diagonal: " << obj2.getDiagonal()
+		<< ", Color: " << obj2.getColor() << endl;
+
+	cout << "End testing\n";
+	return 0;
+}
 
 // Ключове слово static 
 
