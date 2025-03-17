@@ -115,184 +115,225 @@ int  foo::count = 0;
 //для роботи зі статичними полями класу.
 
 /*  Example 3
-Створити тип даних - клас вектор, який має поля x, y типу double і змінну стану. У класі визначити
+Створити тип даних - клас вектор, який має поля x, y та z типу float і змінну стану. У класі визначити
 o	конструктор без параметрів(інінціалізує поля в нуль);
-o	конструктор з одним параметром типу double (інінціалізує поля);
-o	конструктор з одним параметром вказівник на тип double (інінціалізує поля x, y значенням масиву за вказівником, якщо вказівник NULL (nulptr) то встановити код помилки);
+o	конструктор з одним параметром типу float (інінціалізує поля x, y та z значенням параметру);
+o	конструктор з одним параметром вказівник на тип (інінціалізує поля x, y та z значенням масиву за вказівником, якщо вказівник NULL (nulptr) то встановити код помилки);
 o	деструктор із виведенням інформації про стан вектора;
+o	визначити функцію, яка присвоює полю x, y або z деяке значення (параметр за замовчуванням);
+o	функцію яка одержує деякий елемент з полів x, y та z;
+o	конструктор копій та операцію присвоєння; // !!!
 o	визначити функції друку, додавання, віднімання, векторний добуток які здійснюють ці арифметичні операції з даними цього класу;
-o	функцію ділення на ціле типу double(при діленні на 0 змінити стан, а ділення не виконувати);
-o	визначити функцію порівняння менше які повертають true або false.
+o	функцію ділення на ціле типу short(при діленні на 0 змінити стан, а ділення не виконувати)
+o	визначити функції порівняння: більше, менше або рівно, які повертають true або false
 У змінну стани встановлювати код помилки, діленні на 0, при передачі NULL (nulptr) в конструкторі із вказівником. Передбачити можливість підрахунку числа об'єктів даного типу. Написати програму тестування всіх можливостей цього класу.
 */
-enum STATE {
-	OK, BAD_INIT, BAD_DIV
-};
+#include <iostream>
+#include <cmath>
+#include <stdexcept>
+using namespace std;
 
-class Vec2
-{
-	double  x, y;
+enum STATE { OK, BAD_INIT, BAD_DIV };
+
+class Vector {
+	double x, y, z;
 	int state;
 	static int count;
+
 public:
-	Vec2() : x(0), y(0) {
-		state = OK; count++;
-	}   // 	 конструктор без параметрів
-	Vec2(double iv) : x(iv), y(iv) {
-		state = OK; count++;
+	// Конструктори
+	Vector() : x(0), y(0), z(0), state(OK) {
+		count++;
+		cout << "Vector created: " << *this << " (Default constructor)" << endl;
 	}
-	Vec2(double ix, double iy);
-	Vec2(double* v);
-	~Vec2() {
+	Vector(double iv) : x(iv), y(iv), z(iv), state(OK) {
+		count++;
+		cout << "Vector created: " << *this << " (Single value constructor)" << endl;
+	}
+	Vector(double ix, double iy, double iz) : x(ix), y(iy), z(iz), state(OK) {
+		count++;
+		cout << "Vector created: " << *this << " (Three values constructor)" << endl;
+	}
+	Vector(double* v);
+	Vector(const Vector& other);
+
+	// Деструктор
+	~Vector() {
 		count--;
-		cout << " state Vec " << state;
-		cout << " Vec delete \n";
+		cout << "Vector destroyed: " << *this << " (State: " << state << ")" << endl;
 	}
-	Vec2(const Vec2&);
-	Vec2 Add(Vec2& d);
-	Vec2 Sub(Vec2& d);
-	Vec2 Mul(double d);
-	Vec2 Div(double d);
-	void Input();   //  !!! Без первантаження операцій    
-	void Output();  //  !!! Без первантаження операцій
-	bool CompLessAll(Vec2& s);
-	static int getCount() {
-		if (count <= 0) cout << " Немає об'єктів Vec2 ";
-		return count;
-	}
-	int getState() { return state; }
+
+	// Оператор присвоєння
+	Vector& operator=(const Vector& other);
+
+	// Оператори
+	Vector operator+(const Vector& other) const;
+	Vector operator-(const Vector& other) const;
+	Vector operator*(double scalar) const;
+	Vector operator/(short scalar);
+	bool operator==(const Vector& other) const;
+	bool operator!=(const Vector& other) const;
+	bool operator>(const Vector& other) const;
+	bool operator<(const Vector& other) const;
+	friend ostream& operator<<(ostream& os, const Vector& v);
+	friend istream& operator>>(istream& is, Vector& v);
+
+	// Додаткові методи
+	void setValue(char field, double value = 0.0);
+	double getValue(char field) const;
+	Vector Cross(const Vector& other) const;
+	static int getCount() { return count; }
 };
-int Vec2::count = 0;
-Vec2::Vec2(double ix, double iy) {
-	x = ix; y = iy;
-	state = OK;
-	count++;
-}
-Vec2::Vec2(const Vec2& s) {
-	//if (this == &s) return; //  // the expression is used in the old standard
-	x = s.x; y = s.y; state = OK;
-	count++;
-};
-Vec2::Vec2(double* v) {
-	if (v == nullptr) {
-		state = BAD_INIT; x = 0; y = 0;
+
+int Vector::count = 0;
+
+// Конструктор з вказівником
+Vector::Vector(double* v) {
+	if (!v) {
+		state = BAD_INIT;
+		x = y = z = 0;
 	}
 	else {
-		x = v[0]; y = v[1];
+		x = v[0]; y = v[1]; z = v[2];
 		state = OK;
 	}
 	count++;
-}
-void Vec2::Input() {
-	cout << " Input  x y ";
-	cin >> x >> y;
-}
-void Vec2::Output() {
-	cout << " x =" << x << " y = " << y << " state  " << state << endl;
+	cout << "Vector created: " << *this << " (Pointer constructor)" << endl;
 }
 
-Vec2 Vec2::Add(Vec2& s) {
-	Vec2 tmp;
-	tmp.x = x + s.x;
-	tmp.y = y + s.y;
-	return tmp;
+// Конструктор копій
+Vector::Vector(const Vector& other) : x(other.x), y(other.y), z(other.z), state(other.state) {
+	count++;
+	cout << "Vector created: " << *this << " (Copy constructor)" << endl;
 }
 
-Vec2 Vec2::Sub(Vec2& s) {
-	Vec2 tmp;
-	tmp.x = x - s.x;
-	tmp.y = y - s.y;
-	return tmp;
+// Оператор присвоєння
+Vector& Vector::operator=(const Vector& other) {
+	if (this != &other) {
+		x = other.x;
+		y = other.y;
+		z = other.z;
+		state = other.state;
+	}
+	cout << "Vector assigned: " << *this << " (Assignment operator)" << endl;
+	return *this;
 }
-Vec2 Vec2::Div(double d) {
-	Vec2 tmp;
-	if (fabs(d) < 1.e-25) {
-		tmp.state = BAD_DIV;
-		cout << " Error div \n";
+
+// Оператори
+Vector Vector::operator+(const Vector& other) const {
+	return Vector(x + other.x, y + other.y, z + other.z);
+}
+
+Vector Vector::operator-(const Vector& other) const {
+	return Vector(x - other.x, y - other.y, z - other.z);
+}
+
+Vector Vector::operator*(double scalar) const {
+	return Vector(x * scalar, y * scalar, z * scalar);
+}
+
+Vector Vector::operator/(short scalar) {
+	if (scalar == 0) {
+		state = BAD_DIV;
+		cerr << "Error: Division by zero" << endl;
 		return *this;
 	}
-	tmp.x = x / d;
-	tmp.y = y / d;
-	return tmp;
-}
-Vec2 Vec2::Mul(double d) {
-	Vec2 tmp;
-	tmp.x = x * d;
-	tmp.y = y * d;
-	return tmp;
+	return Vector(x / scalar, y / scalar, z / scalar);
 }
 
-bool Vec2::CompLessAll(Vec2& s) {
-
-	if (x < s.x && y < s.y) return true;
-	return false;
+bool Vector::operator==(const Vector& other) const {
+	return (x == other.x && y == other.y && z == other.z);
 }
 
-int mainExample3()
-{
-#if !defined(CODING_VS_CODE)
-	setlocale(LC_CTYPE, "ukr");
-	cout << "Тестування створенного класу \n";
-	cout << "Тестування конструкторiв \n"; 
-#else 
-	cout << "Testing create class  \n";
-	cout << "Testing crot's  \n";
-#endif
-	Vec2 ObjCDef;
-	ObjCDef.Output();
-	Vec2 ObjP1(10.0);
-	ObjP1.Output();
-	double  a = 1.0, b = 2.0;
-	Vec2  ObjP2(a, b);
-	ObjP2.Output();
-	Vec2 ObjCopy(ObjP2);
-	double* v = nullptr, v2[] = { 1.2, 3.3 };
-	Vec2  ObjP3(v2);
-	if (ObjP3.getState() != OK) cout << " ObjP3  x= 0  y= 0  \n";
-	Vec2  ObjP4(v2);
-	if (ObjP4.getState() != OK) cout << " ObjP4 x= 0  y= 0  \n";
-#if !defined(CODING_VS_CODE)
-	cout << " Кiлькiсть створених об'єктiв Vec2 " << Vec2::getCount() << endl;
-	cout << "Тестування введення \n";
-	ObjCDef.Input();
-	cout << "Тестування функцiй \n";
-	ObjCDef = ObjCDef.Add(ObjP2);
-	ObjCDef.Output();
-	cout << " \n Кiлькiсть створених об'єктiв Vec2 до Sub " << Vec2::getCount() << endl;
-	ObjCDef = ObjCDef.Sub(ObjP2);
-	cout << " \n Кiлькiсть створених об'єктiв Vec2 пiсля Sub " << Vec2::getCount() << endl;
-#else 
-	cout << "Testing input \n";
-	ObjCDef.Input();
-	cout << "Testing gunction \n";
-	ObjCDef = ObjCDef.Add(ObjP2);
-	ObjCDef.Output();
-	cout << " \n Counts create objects Vec2 before  Sub " << Vec2::getCount() << endl;
-	ObjCDef = ObjCDef.Sub(ObjP2);
-	cout << " \n  Counts create objects Vec2 after Sub  " << Vec2::getCount() << endl;
-#endif
+bool Vector::operator!=(const Vector& other) const {
+	return !(*this == other);
+}
 
-	ObjCDef.Output();
-	ObjCDef = ObjCDef.Mul(5);
-	ObjCDef.Output();
-	ObjCDef = ObjCDef.Div(1.3);
-	if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
-	ObjCDef.Output();
+bool Vector::operator>(const Vector& other) const {
+	return (x > other.x && y > other.y && z > other.z);
+}
 
-	ObjCDef = ObjCDef.Div(0.0);
-	if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
-	ObjCDef.Output();
-	cout << "ObjCopy state " << ObjCopy.getState() << endl;
-	if (ObjCopy.CompLessAll(ObjCDef))  cout << "ObjCopy less ObjDef  " << endl;
+bool Vector::operator<(const Vector& other) const {
+	return (x < other.x && y < other.y && z < other.z);
+}
 
-	
-#if !defined(CODING_VS_CODE)
-	cout << "Завершення  тестування  \n";
-#else 
-	cout << "Completion of testing  \n";
-#endif
-	return 1;
+ostream& operator<<(ostream& os, const Vector& v) {
+	os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+	return os;
+}
 
+istream& operator>>(istream& is, Vector& v) {
+	cout << "Enter x, y, z: ";
+	is >> v.x >> v.y >> v.z;
+	return is;
+}
+
+// Встановлення значення поля
+void Vector::setValue(char field, double value) {
+	switch (field) {
+	case 'x': x = value; break;
+	case 'y': y = value; break;
+	case 'z': z = value; break;
+	default: throw invalid_argument("Error: Invalid field");
+	}
+}
+
+// Отримання значення поля
+double Vector::getValue(char field) const {
+	switch (field) {
+	case 'x': return x;
+	case 'y': return y;
+	case 'z': return z;
+	default: throw invalid_argument("Error: Invalid field");
+	}
+}
+
+// Векторний добуток
+Vector Vector::Cross(const Vector& other) const {
+	return Vector(y * other.z - z * other.y,
+		z * other.x - x * other.z,
+		x * other.y - y * other.x);
+}
+
+// Тестування
+int mainExample3() {
+	try {
+		cout << "Testing Vector class...\n";
+
+		Vector v1;
+		Vector v2(5.0);
+		Vector v3(1.0, 2.0, 3.0);
+		Vector v4 = v3;
+		Vector v5 = v3 + v2;
+		Vector v6 = v3 - v2;
+		Vector v7 = v3 * 2.0;
+		Vector v8 = v3 / 2;
+		Vector v9 = v3.Cross(v2);
+
+		cout << "v1: " << v1 << endl;
+		cout << "v2: " << v2 << endl;
+		cout << "v3: " << v3 << endl;
+		cout << "v4 (copy of v3): " << v4 << endl;
+		cout << "v5 (v3 + v2): " << v5 << endl;
+		cout << "v6 (v3 - v2): " << v6 << endl;
+		cout << "v7 (v3 * 2.0): " << v7 << endl;
+		cout << "v8 (v3 / 2): " << v8 << endl;
+		cout << "v9 (v3 x v2): " << v9 << endl;
+
+		cout << "Is v3 > v2? " << (v3 > v2) << endl;
+		cout << "Is v3 < v2? " << (v3 < v2) << endl;
+
+		Vector v10;
+		cin >> v10;
+		cout << "v10 (user input): " << v10 << endl;
+
+		cout << "Vector count: " << Vector::getCount() << endl;
+	}
+	catch (const exception& e) {
+		cerr << e.what() << endl;
+	}
+
+	return 0;
 }
 /*example  4
 Створити тип даних - клас вектор, який має вказівник на ComplexDouble, число елементів і змінну стану. У класі визначити
