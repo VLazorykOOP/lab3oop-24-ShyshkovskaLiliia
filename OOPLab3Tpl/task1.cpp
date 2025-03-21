@@ -1,91 +1,107 @@
 #include <iostream>
-#include <string>
 #include <cmath>
-
 using namespace std;
 
 class Rhombus {
-private:
-	double side;    
-	double diagonal;
-	string color; 
+    double side;
+    double diagonal1;
+    double diagonal2;
+    unsigned int color;
 
 public:
-	// Конструктори
-	Rhombus() : side(1.0), diagonal(sqrt(2)), color("white") {} // Конструктор за замовчуванням
-	Rhombus(double s, double d, string c) { // Конструктор з параметрами
-		setSide(s);
-		setDiagonal(d);
-		setColor(c);
-	}
+    // Конструктори
+    Rhombus() : side(1.0), diagonal1(sqrt(2)), diagonal2(sqrt(2)), color(0) {}
+    explicit Rhombus(double s) : side(s), color(0) { updateDiagonals(); }
+    explicit Rhombus(int c) : side(1.0), color((c >= 0 && c <= 10000) ? c : 0) { updateDiagonals(); }
+    Rhombus(double s, double d1, double d2, int c) {
+        setSide(s);
+        setDiagonals(d1, d2);
+        setColor(c);
+    }
 
-	// Методи встановлення значень
-	void setSide(double s) {
-		if (s > 0 && s < 1.e+100) {
-			side = s;
-		}
-		else {
-			cout << "Error: Invalid side value (" << s << "). Must be between 0 and 1.e+100.\n";
-		}
-	}
+    // Встановлення значень
+    void setSide(double s) {
+        if (s > 0 && s < 1.e+100) {
+            side = s;
+            updateDiagonals();
+        } else {
+            cout << "Помилка: некоректне значення сторони!\n";
+        }
+    }
 
-	void setDiagonal(double d) {
-		if (d > 0 && d < 2 * side) {
-			diagonal = d;
-		}
-		else {
-			cout << "Error: Invalid diagonal value (" << d << "). Must be positive and smaller than twice the side length ("
-				<< 2 * side << ").\n";
-		}
-	}
+    void setDiagonals(double d1, double d2) {
+        if (d1 > 0 && d2 > 0 && d1 < 1.e+100 && d2 < 1.e+100 && isValidDiagonals(d1, d2)) {
+            diagonal1 = d1;
+            diagonal2 = d2;
+        } else {
+            cout << "Помилка: некоректне значення діагоналей!\n";
+        }
+    }
 
-	void setColor(string c) {
-		color = c;
-	}
+    void setColor(int c) {
+        if (c >= 0 && c <= 10000) {
+            color = c;
+        } else {
+            cout << "Помилка: некоректне значення кольору!\n";
+        }
+    }
 
-	// Методи отримання значень (гетери)
-	double getSide() const { return side; }
-	double getDiagonal() const { return diagonal; }
-	string getColor() const { return color; }
+    // Отримання значень
+    double getSide() const { return side; }
+    double getDiagonal1() const { return diagonal1; }
+    double getDiagonal2() const { return diagonal2; }
+    unsigned int getColor() const { return color; }
 
-	// Обчислення площі та периметру
-	double area() const {
-		return (diagonal * diagonal) / 2;
-	}
+    double area() const {
+        return (diagonal1 * diagonal2) / 2;
+    }
 
-	double perimeter() const {
-		return 4 * side;
-	}
+    double perimeter() const {
+        return 4 * side;
+    }
 
-	// Функція друку (використовує гетери для отримання значень)
-	void printInfo() const {
-		cout << "\nSide: " << getSide() << ", Diagonal: " << getDiagonal() << ", Color: " << getColor();
-		cout << ", Area: " << area() << ", Perimeter: " << perimeter() << endl;
-	}
+    void printInfo() const {
+        cout << "\nРомб:";
+        cout << "\nСторона: " << side;
+        cout << "\nДіагоналі: " << diagonal1 << ", " << diagonal2;
+        cout << "\nКолір: " << color;
+        cout << "\nПлоща: " << area();
+        cout << "\nПериметр: " << perimeter() << "\n";
+    }
+
+private:
+    void updateDiagonals() {
+        diagonal1 = diagonal2 = side * sqrt(2); // Оцінка для ромба зі сторонами та рівними діагоналями
+    }
+
+    bool isValidDiagonals(double d1, double d2) const {
+        return (d1 * d1 + d2 * d2) / 4 == side * side;
+    }
 };
 
-int mainExample1() {
-	// Тестування класу
-	Rhombus obj1; // Використання конструктора за замовчуванням
-	obj1.printInfo();
-
-	Rhombus obj2(3.0, 4.0, "blue"); // Використання конструктора з параметрами
-	obj2.printInfo();
-	obj1.setSide(2.5);
-	obj1.setDiagonal(3.5);
-	obj1.setColor("red");
-	obj1.printInfo();
-
-	// Спроба встановлення некоректних значень
-	obj1.setSide(-1.0);
-	obj1.setDiagonal(10.0);
-	obj1.printInfo();
-
-	// Отримання значень через методи доступу
-	cout << "\nTesting get methods:\n";
-	cout << "Side: " << obj2.getSide() << ", Diagonal: " << obj2.getDiagonal()
-		<< ", Color: " << obj2.getColor() << endl;
-
-	cout << "End testing\n";
-	return 0;
+int main() {
+    Rhombus obj;
+    obj.printInfo();
+    
+    double in_side, in_diag1, in_diag2;
+    int in_color;
+    cout << "Введіть сторону, дві діагоналі та колір ромба: ";
+    cin >> in_side >> in_diag1 >> in_diag2 >> in_color;
+    
+    Rhombus obj1(in_side), obj2(in_color), obj3(in_side, in_diag1, in_diag2, in_color);
+    obj1.printInfo();
+    obj2.printInfo();
+    obj3.printInfo();
+    
+    // Тестування обмежень
+    obj.setSide(-5);
+    obj.setSide(5);
+    obj.setSide(2.e100);
+    
+    obj.setColor(-10);
+    obj.setColor(10);
+    obj.setColor(10001);
+    
+    cout << "Тестування завершено.\n";
+    return 0;
 }
