@@ -1,206 +1,154 @@
 #include <iostream>
 #include <cmath>
-#include <stdexcept>
+#include <clocale>
 using namespace std;
 
-enum STATE { OK, BAD_INIT, BAD_DIV };
-
-class Vector {
-	double x, y, z;
-	int state;
-	static int count;
-
-public:
-	// Конструктори
-	Vector() : x(0), y(0), z(0), state(OK) {
-		count++;
-		cout << "Vector created: " << *this << " (Default constructor)" << endl;
-	}
-	Vector(double iv) : x(iv), y(iv), z(iv), state(OK) {
-		count++;
-		cout << "Vector created: " << *this << " (Single value constructor)" << endl;
-	}
-	Vector(double ix, double iy, double iz) : x(ix), y(iy), z(iz), state(OK) {
-		count++;
-		cout << "Vector created: " << *this << " (Three values constructor)" << endl;
-	}
-	Vector(double* v);
-	Vector(const Vector& other);
-
-	// Деструктор
-	~Vector() {
-		count--;
-		cout << "Vector destroyed: " << *this << " (State: " << state << ")" << endl;
-	}
-
-	// Оператор присвоєння
-	Vector& operator=(const Vector& other);
-
-	// Оператори
-	Vector operator+(const Vector& other) const;
-	Vector operator-(const Vector& other) const;
-	Vector operator*(double scalar) const;
-	Vector operator/(short scalar);
-	bool operator==(const Vector& other) const;
-	bool operator!=(const Vector& other) const;
-	bool operator>(const Vector& other) const;
-	bool operator<(const Vector& other) const;
-	friend ostream& operator<<(ostream& os, const Vector& v);
-	friend istream& operator>>(istream& is, Vector& v);
-
-	// Додаткові методи
-	void setValue(char field, double value = 0.0);
-	double getValue(char field) const;
-	Vector Cross(const Vector& other) const;
-	static int getCount() { return count; }
+enum STATE {
+    OK, BAD_INIT, BAD_DIV
 };
 
-int Vector::count = 0;
+class Vector3 {
+private:
+    float x, y, z;
+    int state;
+    static int count;
 
-// Конструктор з вказівником
-Vector::Vector(double* v) {
-	if (!v) {
-		state = BAD_INIT;
-		x = y = z = 0;
-	}
-	else {
-		x = v[0]; y = v[1]; z = v[2];
-		state = OK;
-	}
-	count++;
-	cout << "Vector created: " << *this << " (Pointer constructor)" << endl;
+public:
+    Vector3() : x(0), y(0), z(0) { state = OK; count++; }
+    Vector3(float val) : x(val), y(val), z(val) { state = OK; count++; }
+    Vector3(float ix, float iy, float iz);
+    Vector3(float* v);
+    ~Vector3() {
+        count--;
+        cout << " state Vector3 " << state;
+        cout << " Vector3 deleted\n";
+    }
+    Vector3(const Vector3&);
+    Vector3 Add(Vector3& d);
+    Vector3 Sub(Vector3& d);
+    Vector3 Mul(float d);
+    Vector3 Div(float d);
+    void Input();
+    void Output();
+    bool CompLessAll(Vector3& s);
+    static int getCount() { 
+        if (count <= 0) cout << " No Vector3 objects ";
+        return count; 
+    }
+    int getState() { return state; }
+};
+
+int Vector3::count = 0;
+
+Vector3::Vector3(float ix, float iy, float iz) {
+    x = ix; y = iy; z = iz;
+    state = OK;
+    count++;
 }
 
-// Конструктор копій
-Vector::Vector(const Vector& other) : x(other.x), y(other.y), z(other.z), state(other.state) {
-	count++;
-	cout << "Vector created: " << *this << " (Copy constructor)" << endl;
+Vector3::Vector3(const Vector3& s) {
+    if (this == &s) return;
+    x = s.x; y = s.y; z = s.z; state = OK;
+    count++;
 }
 
-// Оператор присвоєння
-Vector& Vector::operator=(const Vector& other) {
-	if (this != &other) {
-		x = other.x;
-		y = other.y;
-		z = other.z;
-		state = other.state;
-	}
-	cout << "Vector assigned: " << *this << " (Assignment operator)" << endl;
-	return *this;
+Vector3::Vector3(float* v) {
+    if (v == nullptr) {
+        state = BAD_INIT; x = 0; y = 0; z = 0;
+    } else {
+        x = v[0]; y = v[1]; z = v[2];
+        state = OK;
+    }
+    count++;
 }
 
-// Оператори
-Vector Vector::operator+(const Vector& other) const {
-	return Vector(x + other.x, y + other.y, z + other.z);
+void Vector3::Input() {
+    cout << " Input x y z ";
+    cin >> x >> y >> z;
 }
 
-Vector Vector::operator-(const Vector& other) const {
-	return Vector(x - other.x, y - other.y, z - other.z);
+void Vector3::Output() {
+    cout << " x =" << x << " y = " << y << " z = " << z << " state " << state << endl;
 }
 
-Vector Vector::operator*(double scalar) const {
-	return Vector(x * scalar, y * scalar, z * scalar);
+Vector3 Vector3::Add(Vector3& s) {
+    Vector3 tmp;
+    tmp.x = x + s.x;
+    tmp.y = y + s.y;
+    tmp.z = z + s.z;
+    return tmp;
 }
 
-Vector Vector::operator/(short scalar) {
-	if (scalar == 0) {
-		state = BAD_DIV;
-		cerr << "Error: Division by zero" << endl;
-		return *this;
-	}
-	return Vector(x / scalar, y / scalar, z / scalar);
+Vector3 Vector3::Sub(Vector3& s) {
+    Vector3 tmp;
+    tmp.x = x - s.x;
+    tmp.y = y - s.y;
+    tmp.z = z - s.z;
+    return tmp;
 }
 
-bool Vector::operator==(const Vector& other) const {
-	return (x == other.x && y == other.y && z == other.z);
+Vector3 Vector3::Mul(float d) {
+    Vector3 tmp;
+    tmp.x = x * d;
+    tmp.y = y * d;
+    tmp.z = z * d;
+    return tmp;
 }
 
-bool Vector::operator!=(const Vector& other) const {
-	return !(*this == other);
+Vector3 Vector3::Div(float d) {
+    Vector3 tmp;
+    if (fabs(d) < 1.e-25) {
+        tmp.state = BAD_DIV;
+        cout << " Error div \n";
+        return *this;
+    }
+    tmp.x = x / d;
+    tmp.y = y / d;
+    tmp.z = z / d;
+    return tmp;
 }
 
-bool Vector::operator>(const Vector& other) const {
-	return (x > other.x && y > other.y && z > other.z);
+bool Vector3::CompLessAll(Vector3& s) {
+    return (x < s.x && y < s.y && z < s.z);
 }
 
-bool Vector::operator<(const Vector& other) const {
-	return (x < other.x && y < other.y && z < other.z);
-}
-
-ostream& operator<<(ostream& os, const Vector& v) {
-	os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-	return os;
-}
-
-istream& operator>>(istream& is, Vector& v) {
-	cout << "Enter x, y, z: ";
-	is >> v.x >> v.y >> v.z;
-	return is;
-}
-
-// Встановлення значення поля
-void Vector::setValue(char field, double value) {
-	switch (field) {
-	case 'x': x = value; break;
-	case 'y': y = value; break;
-	case 'z': z = value; break;
-	default: throw invalid_argument("Error: Invalid field");
-	}
-}
-
-// Отримання значення поля
-double Vector::getValue(char field) const {
-	switch (field) {
-	case 'x': return x;
-	case 'y': return y;
-	case 'z': return z;
-	default: throw invalid_argument("Error: Invalid field");
-	}
-}
-
-// Векторний добуток
-Vector Vector::Cross(const Vector& other) const {
-	return Vector(y * other.z - z * other.y,
-		z * other.x - x * other.z,
-		x * other.y - y * other.x);
-}
-
-int mainExample3() {
-	try {
-		cout << "Testing Vector class...\n";
-
-		Vector v1;
-		Vector v2(5.0);
-		Vector v3(1.0, 2.0, 3.0);
-		Vector v4 = v3;
-		Vector v5 = v3 + v2;
-		Vector v6 = v3 - v2;
-		Vector v7 = v3 * 2.0;
-		Vector v8 = v3 / 2;
-		Vector v9 = v3.Cross(v2);
-
-		cout << "v1: " << v1 << endl;
-		cout << "v2: " << v2 << endl;
-		cout << "v3: " << v3 << endl;
-		cout << "v4 (copy of v3): " << v4 << endl;
-		cout << "v5 (v3 + v2): " << v5 << endl;
-		cout << "v6 (v3 - v2): " << v6 << endl;
-		cout << "v7 (v3 * 2.0): " << v7 << endl;
-		cout << "v8 (v3 / 2): " << v8 << endl;
-		cout << "v9 (v3 x v2): " << v9 << endl;
-
-		cout << "Is v3 > v2? " << (v3 > v2) << endl;
-		cout << "Is v3 < v2? " << (v3 < v2) << endl;
-
-		Vector v10;
-		cin >> v10;
-		cout << "v10 (user input): " << v10 << endl;
-
-		cout << "Vector count: " << Vector::getCount() << endl;
-	}
-	catch (const exception& e) {
-		cerr << e.what() << endl;
-	}
-
-	return 0;
+int main() {
+    setlocale(LC_CTYPE, "ukr");
+    cout << "Тестування створеного класу \n";
+    cout << "Тестування конструкторів \n";
+    Vector3 ObjCDef;
+    ObjCDef.Output();
+    Vector3 ObjP1(10.0);
+    ObjP1.Output();
+    float a = 1.0, b = 2.0, c = 3.0;
+    Vector3 ObjP2(a, b, c);
+    ObjP2.Output();
+    Vector3 ObjCopy(ObjP2);
+    float* v = nullptr, v2[] = { 1.2, 3.3, 4.5 };
+    Vector3 ObjP3(v2);
+    if (ObjP3.getState() != OK) cout << " ObjP3 x= 0 y= 0 z= 0 \n";
+    Vector3 ObjP4(v2);
+    if (ObjP4.getState() != OK) cout << " ObjP4 x= 0 y= 0 z= 0 \n";
+    cout << " Кількість створених об'єктів Vector3 " << Vector3::getCount() << endl;
+    cout << "Тестування введення \n";
+    ObjCDef.Input();
+    cout << "Тестування функцій \n";
+    ObjCDef = ObjCDef.Add(ObjP2);
+    ObjCDef.Output();
+    cout << " \n Кількість створених об'єктів Vector3 до Sub " << Vector3::getCount() << endl;
+    ObjCDef = ObjCDef.Sub(ObjP2);
+    cout << " \n Кількість створених об'єктів Vector3 після Sub " << Vector3::getCount() << endl;
+    ObjCDef.Output();
+    ObjCDef = ObjCDef.Mul(5);
+    ObjCDef.Output();
+    ObjCDef = ObjCDef.Div(1.3);
+    if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
+    ObjCDef.Output();
+    ObjCDef = ObjCDef.Div(0.0);
+    if (ObjCDef.getState() == STATE::BAD_DIV) cout << "BAD_DIV \n";
+    ObjCDef.Output();
+    cout << "ObjCopy state " << ObjCopy.getState() << endl;
+    if (ObjCopy.CompLessAll(ObjCDef)) cout << "ObjCopy less ObjDef " << endl;
+    cout << "Завершення тестування \n";
+    return 0;
 }
